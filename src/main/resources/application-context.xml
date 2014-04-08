@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xmlns:cxf="http://cxf.apache.org/core"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans.xsd 
+		http://cxf.apache.org/jaxws 
+		http://cxf.apache.org/schemas/jaxws.xsd
+		http://www.springframework.org/schema/util
+		http://www.springframework.org/schema/util/spring-util.xsd
+		http://cxf.apache.org/core
+		http://cxf.apache.org/schemas/core.xsd">
+
+	<import resource="classpath:META-INF/cxf/cxf.xml" />
+	<import resource="classpath:META-INF/cxf/cxf-servlet.xml" />	
+	
+	<util:list id="itfCommandXmlBindingList" list-class="java.util.ArrayList">
+        <value>bright.zheng.learning.webservice.cxf.pojo.Person</value>
+        <value>bright.zheng.learning.webservice.cxf.pojo.Boy</value>
+        <value>bright.zheng.learning.webservice.cxf.pojo.Girl</value>
+        <value>bright.zheng.learning.webservice.cxf.pojo.People</value>
+	</util:list>
+	
+	<bean id="aegisContext" class="org.apache.cxf.aegis.AegisContext" scope="prototype">
+        <property name="writeXsiTypes" value="true"/>
+        <property name="rootClassNames">
+        	<ref bean="itfCommandXmlBindingList"/>
+        </property>
+    </bean>
+ 
+    <bean id="dataBinding" class="org.apache.cxf.aegis.databinding.AegisDatabinding" scope="prototype">
+        <property name="aegisContext" ref="aegisContext"/>
+    </bean>
+    
+    <bean id="service-factory" class="org.apache.cxf.jaxws.support.JaxWsServiceFactoryBean"
+    	scope="prototype">
+		<property name="dataBinding" ref="dataBinding" />
+		<!-- Use this property only for XFire compatibility - this version for 2.0.x 
+		<property name="serviceConfigurations">
+		  <list>
+		    <bean class="org.apache.cxf.jaxws.support.JaxWsServiceConfiguration"/>
+		    <bean class="org.apache.cxf.aegis.databinding.AegisServiceConfiguration"/>
+		    <bean class="org.apache.cxf.service.factory.DefaultServiceConfiguration"/>
+		  </list>
+		</property>-->
+		<!-- Use this property only for XFire compatibility - this version for 2.1
+		<property name="serviceConfigurations">
+		  <list>
+		    <bean class="org.apache.cxf.jaxws.support.JaxWsServiceConfiguration"/>
+		    <bean class="org.apache.cxf.aegis.databinding.XFireCompatibilityServiceConfiguration"/>
+		    <bean class="org.apache.cxf.service.factory.DefaultServiceConfiguration"/>
+		  </list>
+		</property>
+		-->
+		<property name="serviceConfigurations">
+		  <list>
+		    <bean class="org.apache.cxf.jaxws.support.JaxWsServiceConfiguration"/>
+		    <bean class="org.apache.cxf.aegis.databinding.AegisServiceConfiguration"/> 
+		    <bean class="org.apache.cxf.service.factory.DefaultServiceConfiguration"/>
+		  </list>
+		</property>
+	</bean>
+	
+	<bean id="abstractLoggingInterceptor" abstract="true">
+	    <property name="prettyLogging" value="true"/>
+	</bean>
+	<bean id="loggingInInterceptor" class="org.apache.cxf.interceptor.LoggingInInterceptor" parent="abstractLoggingInterceptor"/>
+	<bean id="loggingOutInterceptor" class="org.apache.cxf.interceptor.LoggingOutInterceptor" parent="abstractLoggingInterceptor"/>
+	<bean id="systemTokenServerInterceptor" class="bright.zheng.learning.webservice.cxf.interceptor.SystemTokenServerInterceptor"/>
+		
+	<cxf:bus>
+	    <cxf:inInterceptors>
+	        <ref bean="loggingInInterceptor"/>
+	    </cxf:inInterceptors>
+	    <cxf:outInterceptors>
+	        <ref bean="loggingOutInterceptor"/>
+	    </cxf:outInterceptors>
+	    <cxf:outFaultInterceptors>
+	        <ref bean="loggingOutInterceptor"/>
+	    </cxf:outFaultInterceptors>
+	    <cxf:inFaultInterceptors>
+	        <ref bean="loggingInInterceptor"/>
+	    </cxf:inFaultInterceptors>
+	</cxf:bus>
+	
+
+	<!-- Spring manage ServiceBean -->
+	<bean id="sayHiServ" class="bright.zheng.learning.webservice.cxf.SayHiServiceImpl" />
+	<bean id="personServWithGeneric" class="bright.zheng.learning.webservice.cxf.PersonServiceWithGenericImpl" />
+	<bean id="personServWithBaseClass" class="bright.zheng.learning.webservice.cxf.PersonServiceWithBaseClassImpl" />
+	
+	<!-- JAX-WS Service Endpoint -->
+	<jaxws:endpoint id="sayHiService"
+		implementor="#sayHiServ"
+		address="/sayHiService" >
+	</jaxws:endpoint>
+	
+	<jaxws:endpoint id="personServiceWithGeneric"
+		implementor="#personServWithGeneric"
+		address="/personServiceWithGeneric" >
+		<jaxws:serviceFactory>
+			<ref bean="service-factory" />
+		</jaxws:serviceFactory>
+		<jaxws:inInterceptors>
+			<ref bean="systemTokenServerInterceptor"/>
+        </jaxws:inInterceptors>
+	</jaxws:endpoint>
+	<jaxws:endpoint id="personServiceWithBaseClass"
+		implementor="#personServWithBaseClass"
+		address="/personServiceWithBaseClass" >
+		<jaxws:serviceFactory>
+			<ref bean="service-factory" />
+		</jaxws:serviceFactory>
+		<jaxws:inInterceptors>
+			<ref bean="systemTokenServerInterceptor"/>
+        </jaxws:inInterceptors>
+	</jaxws:endpoint>
+</beans>
