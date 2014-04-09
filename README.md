@@ -26,6 +26,7 @@ Apache CXF 2.7.10
 Testing
 ===============
 This sample project provides full test cases which can cover all required scenarios for provided web services
+
 1. mvn jetty:run
 To start the server
 
@@ -38,5 +39,6 @@ To start the server
 FEEDBACK?
 ===============
 1) Please fork it or;
+
 2) Talk directly to Bright Zheng (bright.zheng AT outlook DOT com) 
   
